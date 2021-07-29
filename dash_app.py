@@ -12,11 +12,11 @@ def calc_valores_acumulados_por_proposta(df):
     df = df.copy()
     
     df['acumulado'] = 0
-    titulo = df.iloc[0]['Título']
+    titulo = df.iloc[0]['Proposta']
     acumulado = df.iloc[0]['count']
 
     for i, row in df.iterrows():
-        novo_titulo = row['Título']
+        novo_titulo = row['Proposta']
         if titulo == novo_titulo:
             acumulado+=row['count']
             df.loc[i, 'acumulado'] = acumulado
@@ -51,18 +51,21 @@ df['count'] = 1
 resultado_eleicao = df.groupby('Título').count()[['count']].sort_values(by='count', ascending = False)
 posicoes = list(range(1, len(resultado_eleicao)+1))
 resultado_eleicao['posicao'] = posicoes
-df['dt_voto'] = df['Data do voto'] + '-' + df['Horário']
-df['dt_voto'] = pd.to_datetime(df['dt_voto'], dayfirst=True)
-votos_por_dia = df.groupby(['Título', 'dt_voto']).count()[['count']].reset_index()
+df['Data do voto'] = df['Data do voto'] + '-' + df['Horário']
+df['Data do voto'] = pd.to_datetime(df['Data do voto'], dayfirst=True)
+votos_por_dia = df.groupby(['Título', 'Data do voto']).count()[['count']].reset_index()
+votos_por_dia.rename({'Título' : 'Proposta'}, axis = 1, inplace=True)
 votos_por_dia = calc_valores_acumulados_por_proposta(votos_por_dia)
-votos_por_dia = votos_por_dia.pivot(index='dt_voto', columns='Título', values='acumulado')
+votos_por_dia = votos_por_dia.pivot(index='Data do voto', columns='Proposta', values='acumulado')
 votos_por_dia = preencher_vazios_acumulado(votos_por_dia)
 
 
 app = dash.Dash(__name__)
 server = app.server
+app.title='Evolução da votação - São Mateus'
 
 app.layout = html.Div([
+    html.H1('Evolução da votação - São Mateus'),
     dcc.Graph(id="line-chart"),
     dcc.Slider(
         id="checklist",
@@ -85,4 +88,4 @@ def update_line_chart(value):
 
 if __name__ == "__main__":
 
-    app.run_server()
+    app.run_server(port=8052, debug=True)
