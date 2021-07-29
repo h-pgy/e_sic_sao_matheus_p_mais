@@ -60,6 +60,7 @@ votos_por_dia = preencher_vazios_acumulado(votos_por_dia)
 
 
 app = dash.Dash(__name__)
+server = app.server
 
 app.layout = html.Div([
     dcc.Graph(id="line-chart"),
@@ -82,4 +83,6 @@ def update_line_chart(value):
     fig = px.line(data)
     return fig
 
-app.run_server(debug=True, port='8052')
+if __name__ == "__main__":
+
+    app.run_server()
